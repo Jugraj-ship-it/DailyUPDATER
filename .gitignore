@@ -32,6 +32,15 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# local database - contains real password hashes and journal content, never commit
+# (SQLite path resolution differs between the Prisma CLI and the Next.js runtime,
+# so the file can end up in either location depending on how it's run)
+/prisma/*.db
+/prisma/*.db-journal
+/*.db
+/*.db-journal
 
 # vercel
 .vercel

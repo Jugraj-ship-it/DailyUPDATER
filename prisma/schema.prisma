@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+
+  entries Entry[]
+
+  friendRequestsSent     Friendship[] @relation("Requester")
+  friendRequestsReceived Friendship[] @relation("Addressee")
+}
+
+// One row per user per day. Section content is stored server-side only -
+// what a friend is allowed to see is decided in code (lib/privacy.ts),
+// never by trusting the client.
+model Entry {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date   String // YYYY-MM-DD
+
+  // Always visible to accepted friends
+  priorities Json // [{ done: boolean, text: string }] x3
+  completed  Json // string[]
+  pending    Json // string[]
+  nextSteps  Json // string[]
+
+  // Private by default - only sent to friends when the matching share* flag is true
+  reflection        String @default("")
+  wentWell          String @default("")
+  challenges        String @default("")
+  gratitude         Json // string[]
+  lifeForcePhysical String @default("")
+  lifeForceHuman    String @default("")
+  lifeForceSelf     String @default("")
+  improve           String @default("")
+
+  shareReflection Boolean @default(false)
+  shareGratitude  Boolean @default(false)
+  shareLifeForce  Boolean @default(false)
+  shareImprove    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+}
+
+// Directed friend request. Both directions are checked when determining
+// whether two users are actually friends (see lib actions).
+model Friendship {
+  id          String   @id @default(cuid())
+  requesterId String
+  requester   User     @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addresseeId String
+  addressee   User     @relation("Addressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  status      String   @default("pending") // pending | accepted | declined
+  createdAt   DateTime @default(now())
+
+  @@unique([requesterId, addresseeId])
+}
