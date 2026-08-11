@@ -6,6 +6,7 @@ import { Lock, Users, Plus, X, Copy, Download, ArrowRight } from "lucide-react";
 import { saveEntry } from "@/app/actions/entries";
 import { buildMarkdown } from "@/lib/markdown";
 import type { EntryFormValues } from "@/lib/defaultEntry";
+import MicButton from "@/components/MicButton";
 
 const btn =
   "inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-line bg-panel px-3 text-sm text-ink transition-colors hover:border-line-strong hover:bg-panel-soft";
@@ -36,6 +37,15 @@ function ListEditor({
               onChange={(e) => {
                 const next = [...items];
                 next[index] = e.target.value;
+                onChange(next);
+              }}
+            />
+            <MicButton
+              value={item}
+              label={`item ${index + 1}`}
+              onResult={(text) => {
+                const next = [...items];
+                next[index] = text;
                 onChange(next);
               }}
             />
@@ -167,6 +177,15 @@ export default function EntryForm({
                   set("priorities", next);
                 }}
               />
+              <MicButton
+                value={p.text}
+                label={`priority ${index + 1}`}
+                onResult={(text) => {
+                  const next = [...values.priorities];
+                  next[index] = { ...next[index], text };
+                  set("priorities", next);
+                }}
+              />
             </div>
           ))}
         </div>
@@ -187,28 +206,50 @@ export default function EntryForm({
             onToggle={() => set("shareReflection", !values.shareReflection)}
           />
         </SectionHeading>
-        <div className="space-y-2">
-          <textarea
-            className={input}
-            rows={2}
-            placeholder="Reflection"
-            value={values.reflection}
-            onChange={(e) => set("reflection", e.target.value)}
-          />
-          <textarea
-            className={input}
-            rows={2}
-            placeholder="What went well"
-            value={values.wentWell}
-            onChange={(e) => set("wentWell", e.target.value)}
-          />
-          <textarea
-            className={input}
-            rows={2}
-            placeholder="Challenges faced"
-            value={values.challenges}
-            onChange={(e) => set("challenges", e.target.value)}
-          />
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted">Reflection</span>
+              <MicButton value={values.reflection} label="reflection" onResult={(text) => set("reflection", text)} />
+            </div>
+            <textarea
+              className={input}
+              rows={2}
+              placeholder="Type here"
+              value={values.reflection}
+              onChange={(e) => set("reflection", e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted">What went well</span>
+              <MicButton value={values.wentWell} label="what went well" onResult={(text) => set("wentWell", text)} />
+            </div>
+            <textarea
+              className={input}
+              rows={2}
+              placeholder="Type here"
+              value={values.wentWell}
+              onChange={(e) => set("wentWell", e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted">Challenges faced</span>
+              <MicButton
+                value={values.challenges}
+                label="challenges faced"
+                onResult={(text) => set("challenges", text)}
+              />
+            </div>
+            <textarea
+              className={input}
+              rows={2}
+              placeholder="Type here"
+              value={values.challenges}
+              onChange={(e) => set("challenges", e.target.value)}
+            />
+          </div>
         </div>
       </section>
 
@@ -233,33 +274,60 @@ export default function EntryForm({
             onToggle={() => set("shareLifeForce", !values.shareLifeForce)}
           />
         </SectionHeading>
-        <div className="space-y-2">
-          <textarea
-            className={input}
-            rows={2}
-            placeholder="Physical"
-            value={values.lifeForcePhysical}
-            onChange={(e) => set("lifeForcePhysical", e.target.value)}
-          />
-          <textarea
-            className={input}
-            rows={2}
-            placeholder="Human"
-            value={values.lifeForceHuman}
-            onChange={(e) => set("lifeForceHuman", e.target.value)}
-          />
-          <textarea
-            className={input}
-            rows={2}
-            placeholder="Self"
-            value={values.lifeForceSelf}
-            onChange={(e) => set("lifeForceSelf", e.target.value)}
-          />
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted">Physical</span>
+              <MicButton
+                value={values.lifeForcePhysical}
+                label="physical"
+                onResult={(text) => set("lifeForcePhysical", text)}
+              />
+            </div>
+            <textarea
+              className={input}
+              rows={2}
+              placeholder="Type here"
+              value={values.lifeForcePhysical}
+              onChange={(e) => set("lifeForcePhysical", e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted">Human</span>
+              <MicButton
+                value={values.lifeForceHuman}
+                label="human"
+                onResult={(text) => set("lifeForceHuman", text)}
+              />
+            </div>
+            <textarea
+              className={input}
+              rows={2}
+              placeholder="Type here"
+              value={values.lifeForceHuman}
+              onChange={(e) => set("lifeForceHuman", e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted">Self</span>
+              <MicButton value={values.lifeForceSelf} label="self" onResult={(text) => set("lifeForceSelf", text)} />
+            </div>
+            <textarea
+              className={input}
+              rows={2}
+              placeholder="Type here"
+              value={values.lifeForceSelf}
+              onChange={(e) => set("lifeForceSelf", e.target.value)}
+            />
+          </div>
         </div>
       </section>
 
       <section className="border-b border-line p-5">
         <SectionHeading title="8. How Can I Improve">
+          <MicButton value={values.improve} label="how can I improve" onResult={(text) => set("improve", text)} />
           <PrivacyToggle shared={values.shareImprove} onToggle={() => set("shareImprove", !values.shareImprove)} />
         </SectionHeading>
         <textarea
