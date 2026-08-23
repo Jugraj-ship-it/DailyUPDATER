@@ -2,6 +2,8 @@ import { redirect, notFound } from "next/navigation";
 import { Lock } from "lucide-react";
 import { auth } from "@/auth";
 import { getFriendEntry, getFriendProfile } from "@/app/actions/friends";
+import { getFriendStats } from "@/app/actions/gamification";
+import StatsStrip from "@/components/StatsStrip";
 import type { FriendVisibleEntry } from "@/lib/privacy";
 
 function todayDate() {
@@ -58,8 +60,13 @@ export default async function FriendCheckinPage({
 
   let profile;
   let entry: FriendVisibleEntry | null;
+  let stats;
   try {
-    [profile, entry] = await Promise.all([getFriendProfile(friendId), getFriendEntry(friendId, date)]);
+    [profile, entry, stats] = await Promise.all([
+      getFriendProfile(friendId),
+      getFriendEntry(friendId, date),
+      getFriendStats(friendId),
+    ]);
   } catch {
     notFound();
   }
@@ -82,6 +89,7 @@ export default async function FriendCheckinPage({
       </header>
 
       <main className="mx-auto w-full max-w-2xl px-4 py-6">
+        <StatsStrip stats={stats} />
         {!entry ? (
           <div className="rounded-xl border border-line bg-panel p-5 shadow-[0_18px_50px_rgba(28,38,35,0.08)]">
             <p className="text-sm text-muted">No entry for this day yet.</p>

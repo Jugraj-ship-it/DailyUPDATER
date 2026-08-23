@@ -4,6 +4,8 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { buildFriendVisibleEntry, type FriendVisibleEntry } from "@/lib/privacy";
+import { assertFriendsWith } from "@/lib/friendship";
+import { awardAchievements } from "@/app/actions/gamification";
 
 async function requireUserId() {
   const session = await auth();
@@ -56,6 +58,11 @@ export async function respondToRequest(friendshipId: string, accept: boolean) {
     where: { id: friendshipId },
     data: { status: accept ? "accepted" : "declined" },
   });
+
+  if (accept) {
+    // Both sides just gained a friend - check both for friend-count badges.
+    await Promise.all([awardAchievements(userId), awardAchievements(friendship.requesterId)]);
+  }
 }
 
 export async function listPendingRequests(): Promise<PendingRequest[]> {
@@ -116,19 +123,6 @@ export async function removeFriend(friendshipId: string) {
     throw new Error("Not authorized to remove this friendship");
   }
   await prisma.friendship.delete({ where: { id: friendshipId } });
-}
-
-async function assertFriendsWith(userId: string, otherUserId: string) {
-  const friendship = await prisma.friendship.findFirst({
-    where: {
-      status: "accepted",
-      OR: [
-        { requesterId: userId, addresseeId: otherUserId },
-        { requesterId: otherUserId, addresseeId: userId },
-      ],
-    },
-  });
-  if (!friendship) throw new Error("You are not friends with this user");
 }
 
 export async function getFriendProfile(

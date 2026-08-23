@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getMyEntry, listMyDates } from "@/app/actions/entries";
+import { getMyStats } from "@/app/actions/gamification";
 import EntryForm from "@/components/EntryForm";
 import TopBar from "@/components/TopBar";
+import StatsStrip from "@/components/StatsStrip";
 import { defaultEntryValues, type EntryFormValues, type PriorityItem } from "@/lib/defaultEntry";
 
 function todayDate() {
@@ -46,12 +48,13 @@ export default async function HomePage({
   const { date: requestedDate } = await searchParams;
   const date = isValidDate(requestedDate) ? requestedDate : todayDate();
 
-  const [existing, historyDates] = await Promise.all([getMyEntry(date), listMyDates()]);
+  const [existing, historyDates, stats] = await Promise.all([getMyEntry(date), listMyDates(), getMyStats()]);
 
   return (
     <div className="min-h-screen">
       <TopBar date={date} email={session.user.email ?? ""} />
       <main className="mx-auto w-full max-w-3xl px-4 py-6">
+        <StatsStrip stats={stats} />
         <EntryForm key={date} date={date} initial={toFormValues(existing)} historyDates={historyDates} />
       </main>
     </div>

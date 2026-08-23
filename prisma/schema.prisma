@@ -17,7 +17,8 @@ model User {
   name         String
   createdAt    DateTime @default(now())
 
-  entries Entry[]
+  entries      Entry[]
+  achievements Achievement[]
 
   friendRequestsSent     Friendship[] @relation("Requester")
   friendRequestsReceived Friendship[] @relation("Addressee")
@@ -57,6 +58,19 @@ model Entry {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, date])
+}
+
+// A permanently-earned badge. Once unlocked it stays unlocked even if the
+// underlying streak later breaks - "type" encodes which milestone
+// (see lib/gamification.ts for the type -> label/description mapping).
+model Achievement {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       String
+  unlockedAt DateTime @default(now())
+
+  @@unique([userId, type])
 }
 
 // Directed friend request. Both directions are checked when determining

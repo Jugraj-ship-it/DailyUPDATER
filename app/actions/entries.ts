@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { awardAchievements } from "@/app/actions/gamification";
 
 const entrySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date"),
@@ -38,11 +39,15 @@ export async function saveEntry(input: EntryInput) {
   const userId = await requireUserId();
   const data = entrySchema.parse(input);
 
-  return prisma.entry.upsert({
+  const entry = await prisma.entry.upsert({
     where: { userId_date: { userId, date: data.date } },
     create: { ...data, userId },
     update: { ...data },
   });
+
+  await awardAchievements(userId);
+
+  return entry;
 }
 
 export async function getMyEntry(date: string) {
