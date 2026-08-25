@@ -7,6 +7,7 @@ import { saveEntry } from "@/app/actions/entries";
 import { buildMarkdown } from "@/lib/markdown";
 import type { EntryFormValues } from "@/lib/defaultEntry";
 import MicButton from "@/components/MicButton";
+import AutoTextarea from "@/components/AutoTextarea";
 
 const btn =
   "inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-line bg-panel px-3 text-sm text-ink transition-colors hover:border-line-strong hover:bg-panel-soft";
@@ -29,15 +30,15 @@ function ListEditor({
       {label && <h2 className="font-medium">{label}</h2>}
       <div className="space-y-2">
         {items.map((item, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <input
+          <div key={index} className="flex items-start gap-2">
+            <AutoTextarea
               className={input}
               value={item}
               placeholder="Add item"
-              onChange={(e) => {
-                const next = [...items];
-                next[index] = e.target.value;
-                onChange(next);
+              onChange={(next) => {
+                const nextItems = [...items];
+                nextItems[index] = next;
+                onChange(nextItems);
               }}
             />
             <MicButton
@@ -90,6 +91,28 @@ function SectionHeading({ title, children }: { title: string; children?: React.R
     <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
       <h2 className="font-medium">{title}</h2>
       {children && <div className="flex items-center gap-2">{children}</div>}
+    </div>
+  );
+}
+
+function TextField({
+  label,
+  value,
+  onChange,
+  minRows = 2,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  minRows?: number;
+}) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted">{label}</span>
+        <MicButton value={value} label={label.toLowerCase()} onResult={onChange} />
+      </div>
+      <AutoTextarea className={input} minRows={minRows} placeholder="Type here" value={value} onChange={onChange} />
     </div>
   );
 }
@@ -156,10 +179,10 @@ export default function EntryForm({
         <SectionHeading title="1. Top 3 Priorities" />
         <div className="space-y-2">
           {values.priorities.map((p, index) => (
-            <div key={index} className="flex items-center gap-2">
+            <div key={index} className="flex items-start gap-2">
               <input
                 type="checkbox"
-                className="h-5 w-5 accent-accent"
+                className="mt-2.5 h-5 w-5 shrink-0 accent-accent"
                 checked={p.done}
                 onChange={(e) => {
                   const next = [...values.priorities];
@@ -167,13 +190,13 @@ export default function EntryForm({
                   set("priorities", next);
                 }}
               />
-              <input
+              <AutoTextarea
                 className={input}
                 value={p.text}
                 placeholder={`Priority ${index + 1}`}
-                onChange={(e) => {
+                onChange={(text) => {
                   const next = [...values.priorities];
-                  next[index] = { ...next[index], text: e.target.value };
+                  next[index] = { ...next[index], text };
                   set("priorities", next);
                 }}
               />
@@ -207,49 +230,9 @@ export default function EntryForm({
           />
         </SectionHeading>
         <div className="space-y-3">
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">Reflection</span>
-              <MicButton value={values.reflection} label="reflection" onResult={(text) => set("reflection", text)} />
-            </div>
-            <textarea
-              className={input}
-              rows={2}
-              placeholder="Type here"
-              value={values.reflection}
-              onChange={(e) => set("reflection", e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">What went well</span>
-              <MicButton value={values.wentWell} label="what went well" onResult={(text) => set("wentWell", text)} />
-            </div>
-            <textarea
-              className={input}
-              rows={2}
-              placeholder="Type here"
-              value={values.wentWell}
-              onChange={(e) => set("wentWell", e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">Challenges faced</span>
-              <MicButton
-                value={values.challenges}
-                label="challenges faced"
-                onResult={(text) => set("challenges", text)}
-              />
-            </div>
-            <textarea
-              className={input}
-              rows={2}
-              placeholder="Type here"
-              value={values.challenges}
-              onChange={(e) => set("challenges", e.target.value)}
-            />
-          </div>
+          <TextField label="Reflection" value={values.reflection} onChange={(v) => set("reflection", v)} />
+          <TextField label="What went well" value={values.wentWell} onChange={(v) => set("wentWell", v)} />
+          <TextField label="Challenges faced" value={values.challenges} onChange={(v) => set("challenges", v)} />
         </div>
       </section>
 
@@ -275,53 +258,9 @@ export default function EntryForm({
           />
         </SectionHeading>
         <div className="space-y-3">
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">Physical</span>
-              <MicButton
-                value={values.lifeForcePhysical}
-                label="physical"
-                onResult={(text) => set("lifeForcePhysical", text)}
-              />
-            </div>
-            <textarea
-              className={input}
-              rows={2}
-              placeholder="Type here"
-              value={values.lifeForcePhysical}
-              onChange={(e) => set("lifeForcePhysical", e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">Human</span>
-              <MicButton
-                value={values.lifeForceHuman}
-                label="human"
-                onResult={(text) => set("lifeForceHuman", text)}
-              />
-            </div>
-            <textarea
-              className={input}
-              rows={2}
-              placeholder="Type here"
-              value={values.lifeForceHuman}
-              onChange={(e) => set("lifeForceHuman", e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">Self</span>
-              <MicButton value={values.lifeForceSelf} label="self" onResult={(text) => set("lifeForceSelf", text)} />
-            </div>
-            <textarea
-              className={input}
-              rows={2}
-              placeholder="Type here"
-              value={values.lifeForceSelf}
-              onChange={(e) => set("lifeForceSelf", e.target.value)}
-            />
-          </div>
+          <TextField label="Physical" value={values.lifeForcePhysical} onChange={(v) => set("lifeForcePhysical", v)} />
+          <TextField label="Human" value={values.lifeForceHuman} onChange={(v) => set("lifeForceHuman", v)} />
+          <TextField label="Self" value={values.lifeForceSelf} onChange={(v) => set("lifeForceSelf", v)} />
         </div>
       </section>
 
@@ -330,11 +269,11 @@ export default function EntryForm({
           <MicButton value={values.improve} label="how can I improve" onResult={(text) => set("improve", text)} />
           <PrivacyToggle shared={values.shareImprove} onToggle={() => set("shareImprove", !values.shareImprove)} />
         </SectionHeading>
-        <textarea
+        <AutoTextarea
           className={input}
-          rows={3}
+          minRows={3}
           value={values.improve}
-          onChange={(e) => set("improve", e.target.value)}
+          onChange={(v) => set("improve", v)}
         />
       </section>
 
@@ -382,7 +321,7 @@ export default function EntryForm({
                 }`}
               >
                 <span>
-                  {new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(
+                  {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(
                     new Date(`${d}T12:00:00`)
                   )}
                 </span>

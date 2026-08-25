@@ -22,6 +22,9 @@ model User {
 
   friendRequestsSent     Friendship[] @relation("Requester")
   friendRequestsReceived Friendship[] @relation("Addressee")
+
+  readReceiptsGiven    ReadReceipt[] @relation("Viewer")
+  readReceiptsReceived ReadReceipt[] @relation("Owner")
 }
 
 // One row per user per day. Section content is stored server-side only -
@@ -71,6 +74,21 @@ model Achievement {
   unlockedAt DateTime @default(now())
 
   @@unique([userId, type])
+}
+
+// Records that `viewer` opened `owner`'s check-in for a given day - powers
+// the "has my friend seen today's update" mark. One row per viewer/owner/day,
+// re-viewing just bumps viewedAt rather than creating duplicates.
+model ReadReceipt {
+  id       String   @id @default(cuid())
+  viewerId String
+  viewer   User     @relation("Viewer", fields: [viewerId], references: [id], onDelete: Cascade)
+  ownerId  String
+  owner    User     @relation("Owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  date     String
+  viewedAt DateTime @default(now())
+
+  @@unique([viewerId, ownerId, date])
 }
 
 // Directed friend request. Both directions are checked when determining

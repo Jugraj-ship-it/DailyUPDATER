@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { Lock } from "lucide-react";
 import { auth } from "@/auth";
-import { getFriendEntry, getFriendProfile } from "@/app/actions/friends";
+import { getFriendEntry, getFriendProfile, recordView } from "@/app/actions/friends";
 import { getFriendStats } from "@/app/actions/gamification";
 import StatsStrip from "@/components/StatsStrip";
 import type { FriendVisibleEntry } from "@/lib/privacy";
@@ -71,6 +71,11 @@ export default async function FriendCheckinPage({
     notFound();
   }
   if (!profile) notFound();
+
+  if (entry) {
+    // Fire-and-forget: this is the "did my friend see today's update" signal.
+    await recordView(friendId, date);
+  }
 
   const priorities = entry?.priorities ?? [];
 

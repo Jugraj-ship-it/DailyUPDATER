@@ -15,7 +15,14 @@ async function requireUserId() {
 
 const emailSchema = z.string().trim().toLowerCase().email();
 
-type FriendSummary = { id: string; name: string; email: string; friendshipId: string; checkedInToday: boolean };
+type FriendSummary = {
+  id: string;
+  name: string;
+  email: string;
+  friendshipId: string;
+  checkedInToday: boolean;
+  hasReadMyEntryToday: boolean;
+};
 type PendingRequest = { friendshipId: string; from: { id: string; name: string; email: string } };
 
 function todayDate() {
@@ -96,13 +103,21 @@ export async function listFriends(): Promise<FriendSummary[]> {
     f.requesterId === userId ? f.addresseeId : f.requesterId
   );
 
-  const todayEntries = friendIds.length
-    ? await prisma.entry.findMany({
-        where: { userId: { in: friendIds }, date: todayDate() },
-        select: { userId: true },
-      })
-    : [];
+  const today = todayDate();
+
+  const [todayEntries, todayReceipts] = await Promise.all([
+    friendIds.length
+      ? prisma.entry.findMany({ where: { userId: { in: friendIds }, date: today }, select: { userId: true } })
+      : Promise.resolve([]),
+    friendIds.length
+      ? prisma.readReceipt.findMany({
+          where: { ownerId: userId, date: today, viewerId: { in: friendIds } },
+          select: { viewerId: true },
+        })
+      : Promise.resolve([]),
+  ]);
   const checkedInIds = new Set(todayEntries.map((e: (typeof todayEntries)[number]) => e.userId));
+  const readIds = new Set(todayReceipts.map((r: (typeof todayReceipts)[number]) => r.viewerId));
 
   const result: FriendSummary[] = [];
   for (const friendship of friendships) {
@@ -111,6 +126,7 @@ export async function listFriends(): Promise<FriendSummary[]> {
       ...friend,
       friendshipId: friendship.id,
       checkedInToday: checkedInIds.has(friend.id),
+      hasReadMyEntryToday: readIds.has(friend.id),
     });
   }
   return result;
@@ -133,6 +149,21 @@ export async function getFriendProfile(
   return prisma.user.findUnique({
     where: { id: friendUserId },
     select: { id: true, name: true, email: true },
+  });
+}
+
+// Self-reported: records that the current user viewed friendUserId's entry
+// for that day. Only called when there's actually something to view - see
+// the friend check-in page.
+export async function recordView(friendUserId: string, date: string) {
+  const userId = await requireUserId();
+  if (userId === friendUserId) return;
+  await assertFriendsWith(userId, friendUserId);
+
+  await prisma.readReceipt.upsert({
+    where: { viewerId_ownerId_date: { viewerId: userId, ownerId: friendUserId, date } },
+    create: { viewerId: userId, ownerId: friendUserId, date },
+    update: { viewedAt: new Date() },
   });
 }
 
