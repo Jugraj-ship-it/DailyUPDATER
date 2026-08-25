@@ -41,7 +41,12 @@ export default function LoginPage() {
             <input name="email" type="email" required className={input} />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">Password</label>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="block text-sm font-medium">Password</label>
+              <a href="/forgot-password" className="text-xs text-accent-dark underline">
+                Forgot password?
+              </a>
+            </div>
             <input name="password" type="password" required className={input} />
           </div>
           {error && <p className="text-sm text-danger">{error}</p>}

@@ -9,7 +9,11 @@ const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const isAuth = !!req.auth;
-  const isAuthPage = req.nextUrl.pathname.startsWith("/login") || req.nextUrl.pathname.startsWith("/signup");
+  const isAuthPage =
+    req.nextUrl.pathname.startsWith("/login") ||
+    req.nextUrl.pathname.startsWith("/signup") ||
+    req.nextUrl.pathname.startsWith("/forgot-password") ||
+    req.nextUrl.pathname.startsWith("/reset-password");
 
   if (!isAuth && !isAuthPage) {
     return NextResponse.redirect(new URL("/login", req.url));

@@ -25,6 +25,8 @@ model User {
 
   readReceiptsGiven    ReadReceipt[] @relation("Viewer")
   readReceiptsReceived ReadReceipt[] @relation("Owner")
+
+  passwordResetTokens PasswordResetToken[]
 }
 
 // One row per user per day. Section content is stored server-side only -
@@ -89,6 +91,20 @@ model ReadReceipt {
   viewedAt DateTime @default(now())
 
   @@unique([viewerId, ownerId, date])
+}
+
+// Only tokenHash is stored, never the raw token (same principle as
+// passwordHash) - if the DB ever leaks, a stolen hash can't be used to
+// take over an account, unlike a stolen raw token. The raw token only
+// ever exists in the email link and in memory while handling the request.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 }
 
 // Directed friend request. Both directions are checked when determining
